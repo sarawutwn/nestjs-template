@@ -1,0 +1,385 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["interactiveTransactions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model crm_users {
+  crm_user_id           Int                     @id @default(autoincrement())
+  crm_user_code         String                  @unique
+  crm_user_email        String                  @unique
+  crm_user_password     String
+  crm_user_firstname    String
+  crm_user_lastname     String
+  crm_user_telephone    String
+  status                Boolean                 @default(false)
+  createdBy             String?
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  refresh_token         String?
+  // Relationship
+  crm_user_logger       crm_user_logger[]
+  crm_customers         crm_customers[]
+  crm_role_id           String
+  crm_role              crm_roles               @relation(fields: [crm_role_id], references: [crm_role_id])
+  crm_point_adjustments crm_point_adjustments[]
+  crm_branch_id         Int
+  crm_branch            crm_branchs             @relation(fields: [crm_branch_id], references: [crm_branch_id])
+}
+
+model crm_user_logger {
+  crm_user_logger_id Int        @id @default(autoincrement())
+  crm_login_status   String
+  createdAt          DateTime   @default(now())
+  // Relationship
+  crm_user_id        Int
+  crm_users          crm_users? @relation(fields: [crm_user_id], references: [crm_user_id])
+}
+
+model crm_roles {
+  crm_role_id           String                  @id @default(uuid())
+  crm_role_name         String
+  crm_role_display_name String
+  crm_role_description  String
+  status                Int                     @default(1)
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  // Relationship
+  crm_permission_group  crm_permission_groups[]
+  crm_users             crm_users[]
+}
+
+model crm_permissions {
+  crm_permission_id           Int                         @id @default(autoincrement())
+  crm_permission_name         String
+  crm_permission_display_name String
+  crm_permission_description  String
+  status                      Int                         @default(1)
+  createdAt                   DateTime                    @default(now())
+  updatedAt                   DateTime                    @updatedAt
+  // Relationship
+  crm_permission_components   crm_permission_components[]
+  crm_permission_groups       crm_permission_groups[]
+}
+
+model crm_permission_components {
+  crm_permission_component_id           Int                     @id @default(autoincrement())
+  crm_permission_component_name         String
+  crm_permission_component_display_name String
+  crm_permission_component_description  String
+  status                                Int                     @default(1)
+  createdAt                             DateTime                @default(now())
+  crm_permission_id                     Int
+  crm_permissions                       crm_permissions?        @relation(fields: [crm_permission_id], references: [crm_permission_id])
+  crm_permission_groups                 crm_permission_groups[]
+}
+
+model crm_permission_groups {
+  crm_permission_group_id     Int                        @id @default(autoincrement())
+  activate                    Boolean                    @default(false)
+  createdAt                   DateTime                   @default(now())
+  updatedAt                   DateTime                   @updatedAt
+  // Relationship
+  crm_role_id                 String
+  crm_roles                   crm_roles?                 @relation(fields: [crm_role_id], references: [crm_role_id])
+  crm_permission_id           Int
+  crm_permissions             crm_permissions            @relation(fields: [crm_permission_id], references: [crm_permission_id])
+  crm_permission_component_id Int
+  crm_permission_components   crm_permission_components? @relation(fields: [crm_permission_component_id], references: [crm_permission_component_id])
+}
+
+model crm_customers {
+  crm_customer_id                String                    @id @unique @default(uuid())
+  crm_customer_phone             String                    @unique
+  crm_customer_email             String?                   @unique
+  crm_customer_fullname          String
+  crm_customer_gender            String
+  crm_customer_type              String
+  crm_customer_birth_of_date     DateTime?
+  crm_customer_total_price       Float                     @default(0.00)
+  crm_customer_condition_service Boolean                   @default(true)
+  crm_customer_condition_privacy Boolean                   @default(true)
+  crm_customer_sms_service       Boolean                   @default(false)
+  crm_customer_email_service     Boolean                   @default(false)
+  crm_customer_line_token        String?
+  status                         Int                       @default(1)
+  createdAt                      DateTime                  @default(now())
+  updatedAt                      DateTime                  @updatedAt
+  activeAt                       DateTime                  @default(now())
+  deleted                        Boolean                   @default(false)
+  // Relationship
+  crm_customer_level_id          String?
+  crm_custoemr_levels            crm_customer_levels?      @relation(fields: [crm_customer_level_id], references: [crm_customer_level_id])
+  crm_user_code                  String?
+  crm_user                       crm_users?                @relation(fields: [crm_user_code], references: [crm_user_code])
+  crm_customer_address           crm_customer_address[]
+  crm_customer_contact           crm_customer_contacts[]
+  crm_quota                      crm_quota[]
+  crm_customer_points            crm_customer_points[]
+  crm_point_special_quota        crm_point_special_quota[]
+}
+
+model crm_customer_levels {
+  crm_customer_level_id     String              @id @default(uuid())
+  crm_customer_level_name   String
+  crm_customer_level_amount Int
+  img_url                   String
+  createdAt                 DateTime            @default(now())
+  updatedAt                 DateTime            @updatedAt
+  crm_customers             crm_customers[]
+  crm_point_members         crm_point_members[]
+  crm_reward_member         crm_reward_member[]
+}
+
+model crm_customer_address {
+  crm_customer_address_id     Int           @id @default(autoincrement())
+  crm_customer_address_type   String
+  crm_customer_address_detail String
+  createdAt                   DateTime      @default(now())
+  updatedAt                   DateTime      @updatedAt
+  deleted                     Boolean       @default(false)
+  // Relationship
+  crm_customer_id             String
+  crm_customer                crm_customers @relation(fields: [crm_customer_id], references: [crm_customer_id])
+}
+
+model crm_customer_contacts {
+  crm_customer_contact_id    Int           @id @default(autoincrement())
+  crm_customer_contact_type  String
+  crm_customer_contact_name  String
+  crm_customer_contact_email String
+  crm_customer_contact_phone String
+  createdAt                  DateTime      @default(now())
+  updatedAt                  DateTime      @updatedAt
+  deleted                    Boolean       @default(false)
+  // Relationship
+  crm_customer_id            String
+  crm_customer               crm_customers @relation(fields: [crm_customer_id], references: [crm_customer_id])
+}
+
+model crm_points {
+  crm_point_id                         Int                      @id @default(autoincrement())
+  crm_point_name                       String
+  crm_point_type_promotion             Boolean
+  crm_point_description                String
+  crm_point_ratio_status               Boolean
+  crm_point_ratio_point                Int?
+  crm_point_welcome_status             Boolean
+  crm_point_welcome_point              Int?
+  crm_point_percent_status             Boolean
+  crm_point_percent_point              Int?
+  crm_point_percent_special_calcurate  Boolean                  @default(false)
+  crm_point_multiple_status            Boolean
+  crm_point_multiple_point             Float?
+  crm_point_multiple_special_calcurate Boolean                  @default(false)
+  crm_point_start_date                 DateTime
+  crm_point_end_date                   DateTime
+  status                               Boolean
+  createdAt                            DateTime                 @default(now())
+  updatedAt                            DateTime                 @updatedAt
+  deleted                              Boolean                  @default(false)
+  // Relationship
+  crm_point_branchs                    crm_point_branchs[]
+  crm_point_transactions               crm_point_transactions[]
+}
+
+model crm_point_transactions {
+  crm_point_transaction_id          String                   @id @default(uuid())
+  crm_point_transaction_total_point Int
+  createdAt                         DateTime                 @default(now())
+  //Relationship
+  crm_point_id                      Int?
+  crm_points                        crm_points?              @relation(fields: [crm_point_id], references: [crm_point_id])
+  crm_point_special_quota_id        String?
+  crm_point_special_quota           crm_point_special_quota? @relation(fields: [crm_point_special_quota_id], references: [crm_point_special_quota_id])
+}
+
+model crm_point_branchs {
+  crm_point_branch_id String      @id @default(uuid())
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+  //Relationship
+  crm_point_id        Int
+  crm_points          crm_points  @relation(fields: [crm_point_id], references: [crm_point_id])
+  crm_branch_id       Int
+  crm_branchs         crm_branchs @relation(fields: [crm_branch_id], references: [crm_branch_id])
+}
+
+model crm_branchs {
+  crm_branch_id       Int                   @id @default(autoincrement())
+  crm_branch_name     String
+  crm_branch_address  String
+  crm_branch_company  String
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  deleted             Boolean               @default(false)
+  // Relationship
+  crm_point_branchs   crm_point_branchs[]
+  crm_customer_points crm_customer_points[]
+  crm_users           crm_users[]
+}
+
+model crm_reward {
+  crm_reward_id           String      @id @default(uuid())
+  crm_reward_name         String
+  crm_reward_detail       String
+  crm_reward_term         String
+  crm_reward_image_url    String
+  crm_reward_point        Int
+  crm_reward_quota_status Boolean
+  crm_reward_quota_total  Int?
+  crm_reward_start_date   DateTime
+  crm_reward_end_date     DateTime
+  crm_reward_branchs      String[]
+  status                  Boolean     @default(true)
+  createdAt               DateTime    @default(now())
+  updatedAt               DateTime    @updatedAt
+  deleted                 Boolean     @default(false)
+  crm_quota               crm_quota[]
+}
+
+model crm_reward_member {
+  crm_reward_member_id             String              @id @default(uuid())
+  crm_reward_member_name           String
+  crm_reward_member_detail         String
+  crm_reward_member_image_url      String
+  crm_reward_member_percent_status Boolean
+  crm_reward_member_percent_total  Int?
+  crm_reward_member_start_date     DateTime
+  crm_reward_member_end_date       DateTime
+  status                           Boolean             @default(true)
+  createdAt                        DateTime            @default(now())
+  updatedAt                        DateTime            @updatedAt
+  deleted                          Boolean             @default(false)
+  // relationship
+  crm_customer_level_id            String
+  crm_customer_levels              crm_customer_levels @relation(fields: [crm_customer_level_id], references: [crm_customer_level_id])
+}
+
+model crm_quota {
+  crm_quota_id          String         @id @default(uuid())
+  crm_quota_status      Boolean        @default(false)
+  crm_quota_code        String
+  crm_quota_redeem_date String?
+  status                Boolean        @default(true)
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+  crm_customer_id       String?
+  crm_customer          crm_customers? @relation(fields: [crm_customer_id], references: [crm_customer_id])
+  crm_reward_id         String
+  crm_reward            crm_reward     @relation(fields: [crm_reward_id], references: [crm_reward_id])
+}
+
+model crm_customer_points {
+  crm_customer_point_id          String                 @id @default(uuid())
+  crm_customer_point_type        String
+  crm_customer_point_sum         Int
+  crm_customer_point_description String
+  crm_customer_point_exp_status  Boolean
+  crm_customer_point_exp_date    Int?
+  crm_customer_point_branch_use  Int
+  createdAt                      DateTime               @default(now())
+  updatedAt                      DateTime               @updatedAt
+  // Relationship
+  crm_customer_id                String
+  crm_customers                  crm_customers          @relation(fields: [crm_customer_id], references: [crm_customer_id])
+  crm_branchs                    crm_branchs            @relation(fields: [crm_customer_point_branch_use], references: [crm_branch_id])
+  crm_point_income               crm_point_income[]
+  crm_point_used                 crm_point_used[]
+  crm_point_adjustment_id        String?
+  crm_point_adjustments          crm_point_adjustments? @relation(fields: [crm_point_adjustment_id], references: [crm_point_adjustment_id])
+}
+
+model crm_point_income {
+  crm_point_income_id          Int                 @id @default(autoincrement())
+  crm_point_income_description String
+  crm_point_income_total       Float
+  createdAt                    DateTime            @default(now())
+  updatedAt                    DateTime            @updatedAt
+  //Relationship
+  crm_customer_point_id        String
+  crm_customer_points          crm_customer_points @relation(fields: [crm_customer_point_id], references: [crm_customer_point_id])
+}
+
+model crm_point_used {
+  crm_point_used_id          Int                 @id @default(autoincrement())
+  crm_point_used_description String
+  crm_point_used_total       Float
+  createdAt                  DateTime            @default(now())
+  updatedAt                  DateTime            @updatedAt
+  //Relationship
+  crm_customer_point_id      String
+  crm_customer_points        crm_customer_points @relation(fields: [crm_customer_point_id], references: [crm_customer_point_id])
+}
+
+model crm_point_adjustments {
+  crm_point_adjustment_id        String                @id @default(uuid())
+  crm_point_adjustment_status    String
+  crm_point_adjustment_file_name String
+  createdAt                      DateTime              @default(now())
+  // Relationship
+  crm_customer_points            crm_customer_points[]
+  crm_user_code                  String
+  crm_users                      crm_users             @relation(fields: [crm_user_code], references: [crm_user_code])
+}
+
+model crm_point_specials {
+  crm_point_special_id                       String                    @id @default(uuid())
+  crm_point_special_name                     String
+  crm_point_special_description              String
+  crm_point_special_percent_status           Boolean
+  crm_point_special_percent_point            Int?
+  crm_point_special_percent_fix_cost_status  Boolean
+  crm_point_special_percent_fix_cost_min     Int?
+  crm_point_special_percent_fix_cost_max     Int?
+  crm_point_special_multiple_status          Boolean
+  crm_point_special_multiple_point           Int?
+  crm_point_special_multiple_fix_cost_status Boolean
+  crm_point_special_multiple_fix_cost_min    Int?
+  crm_point_special_multiple_fix_cost_max    Int?
+  crm_point_special_start_date               DateTime
+  crm_point_special_end_date                 DateTime
+  status                                     Boolean                   @default(true)
+  createdAt                                  DateTime                  @default(now())
+  updatedAt                                  DateTime                  @updatedAt
+  // Relationship
+  crm_point_special_quota                    crm_point_special_quota[]
+}
+
+model crm_point_members {
+  crm_point_member_id              String              @id @default(uuid())
+  crm_point_member_name            String
+  crm_point_member_description     String
+  crm_point_member_percent_status  Boolean
+  crm_point_member_percent_point   Int?
+  crm_point_member_multiple_status Boolean
+  crm_point_member_multiple_point  Int?
+  crm_point_member_start_date      DateTime
+  crm_point_member_end_date        DateTime
+  status                           Boolean             @default(true)
+  createdAt                        DateTime            @default(now())
+  updatedAt                        DateTime            @updatedAt
+  // Relationship
+  crm_customer_level_id            String
+  crm_customer_levels              crm_customer_levels @relation(fields: [crm_customer_level_id], references: [crm_customer_level_id])
+}
+
+model crm_point_special_quota {
+  crm_point_special_quota_id          String                   @id @default(uuid())
+  crm_point_special_quota_status      Boolean                  @default(false)
+  crm_point_special_quota_code        String
+  crm_point_special_quota_redeem_date DateTime?
+  status                              Boolean                  @default(true)
+  createdAt                           DateTime                 @default(now())
+  updatedAt                           DateTime                 @updatedAt
+  // Relationship
+  crm_point_special_id                String?
+  crm_point_special                   crm_point_specials?      @relation(fields: [crm_point_special_id], references: [crm_point_special_id])
+  crm_customer_id                     String?
+  crm_customer                        crm_customers?           @relation(fields: [crm_customer_id], references: [crm_customer_id])
+  crm_point_transactions              crm_point_transactions[]
+}
